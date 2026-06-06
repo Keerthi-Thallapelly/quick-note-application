@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Quick Notes App</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>📝 Quick Notes Application</h1>
+
+    <p>Save and manage your notes instantly.</p>
+
+    <textarea
+        id="note"
+        placeholder="Write your note here...">
+    </textarea>
+
+    <button onclick="saveNote()">
+        Save Note
+    </button>
+
+    <h2>📌 Saved Notes</h2>
+
+    <div id="notesList"></div>
+
+</div>
+
+<script>
+
+async function saveNote() {
+
+    let note =
+        document.getElementById("note").value;
+
+    if(note.trim() === "") {
+        alert("Please enter a note");
+        return;
+    }
+
+    await fetch('/add_note', {
+        method: 'POST',
+
+        headers: {
+            'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+            note: note
+        })
+    });
+
+    document.getElementById("note").value = "";
+
+    loadNotes();
+}
+
+async function loadNotes() {
+
+    let response =
+        await fetch('/notes');
+
+    let notes =
+        await response.json();
+
+    let list =
+        document.getElementById("notesList");
+
+    list.innerHTML = "";
+
+    notes.forEach(note => {
+
+        list.innerHTML += `
+        <div class="note-card">
+
+            <h3>${note[1]}</h3>
+
+            <small>
+            ${note[2] || ""}
+            </small>
+
+            <br><br>
+
+            <button
+                class="delete-btn"
+                onclick="deleteNote(${note[0]})">
+                Delete
+            </button>
+
+        </div>
+        `;
+    });
+}
+
+async function deleteNote(id) {
+
+    await fetch(
+        '/delete_note/' + id,
+        {
+            method: 'DELETE'
+        }
+    );
+
+    loadNotes();
+}
+
+loadNotes();
+
+</script>
+
+</body>
+</html>
